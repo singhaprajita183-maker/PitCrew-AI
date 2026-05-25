@@ -1,48 +1,45 @@
-# 🏎️ PitCrew AI — Race Strategy Copilot
+# 🏎️ PitCrew AI // Race Strategy Copilot
 
-### *Intelligent, Explainable Race Telemetry Analysis Powered by IBM Granite AI & watsonx.ai*
-
----
-
-## 🎯 Project Overview
-**PitCrew AI** is a next-generation decision intelligence platform built for motorsport racing teams. In Formula 1, split-second decisions worth millions of dollars are made based on streams of data. PitCrew AI ingests complex telemetry parameters (tire wear, fuel levels, track temperatures, weather changes) and utilizes **IBM Granite AI** via **watsonx.ai** to generate instant, explainable, and actionable pit-stop strategies.
-
-### ⚡ The One-Line Pitch
-> *"Transforming raw racing telemetry into trusted, split-second strategic advantages through explainable AI."*
+> **The Cognitive Strategy Engine for Motorsport Simulation** > Built with Streamlit, IBM Granite AI, and watsonx.ai. Telemetry is infrastructure. Strategy is the product.
 
 ---
 
-## 🚨 The Problem & Challenge
-Modern racing teams handle over **1,000 data points per second** streaming from car sensors. During a live race, strategy engineers face:
-* **Cognitive Overload:** Balancing tire degradation, fuel weight, changing weather, and competitor gaps simultaneously under extreme time stress.
-* **The 'Black-Box' Issue:** Existing AI tools give data predictions but don't explain *why* a specific decision is recommended, making engineers hesitant to trust them blindly.
+## 🌌 Overview
 
-## 💡 Our Solution: PitCrew AI
-PitCrew AI solves this by introducing an **Explainable AI Race Copilot**:
-* **Real-time Data Synthesizer:** Computes tire degradation modeling and stint projections instantly.
-* **Transparent AI Reasoning:** Powered by **IBM Granite (13B Chat)**, every recommendation (e.g., *BOX NOW* or *STAY OUT*) comes with clear, text-based analytical reasoning.
-* **Dynamic Simulation Dashboard:** Built with Streamlit to present a cinematic, dark-themed F1 dashboard interface.
+**PitCrew AI** is a real-time race strategy inference system designed for Formula racing simulation. While conventional dashboards only display raw numbers, PitCrew AI processes live telemetry—such as tire degradation matrix, fuel remaining delta, track temperature variances, and weather vectors—to compute deterministic, physics-first strategy recommendations.
+
+The engine is engineered to deliver high-stakes decision support (e.g., Undercut/Overcut metrics) backed by explainable generative reasoning via **IBM Granite AI**.
 
 ---
 
-## 🛠️ Tech Stack & IBM Technology Integration
+## 📂 Repository Architecture
 
-* **AI Engine:** IBM Granite 13B Chat Model (`ibm/granite-13b-chat-v2`)
-* **AI Platform & Inference:** IBM watsonx.ai cloud infrastructure
-* **Workflow Framework:** Langflow & Python-dotenv orchestration
-* **Frontend/UI:** Streamlit & Custom Cinematic CSS Styling
-* **Data Processing:** Pandas, NumPy, and Plotly Analytics
+The project follows an industrial-grade modular software tier layout:
 
----
+```text
+PitCrew-AI/
+├── src/
+│   ├── backend/
+│   │   ├── inference/
+│   │   │   └── cognitive_engine.py   # Deterministic strategy computations
+│   │   └── reasoning/
+│   │       └── granite_client.py     # IBM watsonx AI client orchestration
+│   └── frontend/
+│       └── app.py                    # Streamlit Mission Control surface
+├── infrastructure/                   # Deployment configurations & environment stubs
+├── docs/                             # Strategy methodology documentation
+├── tests/                            # Automation and validation suites
+├── requirements.txt                  # Python production dependencies
+└── README.md                         # Product documentation
+git clone [https://github.com/singhaprajita183-maker/PitCrew-AI.git](https://github.com/singhaprajita183-maker/PitCrew-AI.git)
+cd PitCrew-AI
+WATSONX_APIKEY = "your_ibm_watsonx_api_key"
+PROJECT_ID = "your_ibm_project_id"
+streamlit run src/frontend/app.py
+cat << 'EOF' > app.py
+import os
+import sys
 
-## 🚀 Quick Start & Installation
-
-### Prerequisites
-* Python 3.9+
-* GitHub Account
-
-### Local Deployment
-1. Clone the repository:
-   ```bash
-   git clone [https://github.com/singhaprajita183-maker/PitCrew-AI.git](https://github.com/singhaprajita183-maker/PitCrew-AI.git)
-   cd PitCrew-AI
+# Seedhe src/frontend/app.py ko trigger karne ke liye shortcut
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'src')))
+from src.frontend import app
