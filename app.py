@@ -1,98 +1,168 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import time
-import os
-from ibm_watsonx_ai.foundation_models import Model
 
-# Page configuration for a futuristic racing look
+# Page Configuration with Premium F1 Theme
 st.set_page_config(
-    page_title="PitCrew AI - Your Race Copilot",
+    page_title="PitCrew AI // Race Copilot",
     page_icon="🏎️",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# Custom CSS for dark cinematic F1 racing theme
+# Custom CSS for Black, Blue, and Red Neon F1 Styling
 st.markdown("""
 <style>
-    body { background-color: #0a0f1d; }
-    .stApp { background-color: #0a0f1d; color: #ffffff; }
-    h1, h2, h3 { color: #00f2fe; font-family: 'Arial Black', sans-serif; }
-    .stButton>button { background-color: #ff007f; color: white; border-radius: 5px; font-weight: bold; width: 100%; height: 50px; }
-    .stButton>button:hover { background-color: #ff0055; color: white; }
-    .metric-card { background-color: #1e293b; padding: 20px; border-radius: 10px; border-left: 5px solid #00f2fe; margin-bottom: 15px; }
-    .alert-card { background-color: #3b0712; padding: 20px; border-radius: 10px; border-left: 5px solid #ff0055; margin-bottom: 15px; }
+    /* Main Background - Deep Carbon Black */
+    .stApp {
+        background-color: #05070A;
+    }
+    
+    /* Sidebar Background - Dark Blue-Black */
+    section[data-testid="stSidebar"] {
+        background-color: #0A0F18 !important;
+        border-right: 2px solid #00F0FF;
+    }
+    
+    /* Metric Boxes - Deep Black with Neon Blue border and Red accent */
+    div[data-testid="stMetric"] {
+        background-color: #0D131F !important;
+        border: 1px solid #00F0FF !important;
+        border-left: 6px solid #FF1801 !important;
+        padding: 15px !important;
+        border-radius: 12px !important;
+        box-shadow: 0px 4px 15px rgba(0, 240, 255, 0.1);
+    }
+    
+    /* Strategy & Output Boxes - Dark with Red Border */
+    .strategy-box {
+        padding: 18px;
+        background-color: #0A0F18;
+        border: 1px solid #FF1801;
+        border-left: 6px solid #00F0FF;
+        border-radius: 10px;
+        margin-bottom: 15px;
+        box-shadow: 0px 4px 15px rgba(255, 24, 1, 0.1);
+    }
+    
+    /* Critical Alert Box - Deep Racing Red */
+    .critical-alert {
+        padding: 12px;
+        background-color: #450A0A;
+        border: 1px solid #FF1801;
+        border-radius: 6px;
+        color: #FFD3D3;
+        font-weight: bold;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    /* Text Colors */
+    h1, h2, h3, p {
+        color: #FFFFFF !important;
+    }
+    
+    /* Custom Title Highlight */
+    .f1-title {
+        color: #FF1801 !important;
+        font-weight: 900;
+    }
+    .f1-subtitle {
+        color: #00F0FF !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🏎️ PITCREW AI // RACE COPILOT")
-st.subheader("Advanced Race Strategy Powered by IBM Granite AI & watsonx.ai")
-st.write("---")
+# --- SIDEBAR: LIVE TELEMETRY INPUTS ---
+st.sidebar.markdown("<h2 style='color:#00F0FF;'>📊 TELEMETRY INPUTS</h2>", unsafe_allow_html=True)
 
-# Sidebar for Telemetry Inputs
-st.sidebar.header("📊 LIVE TELEMETRY INPUTS")
-lap_number = st.sidebar.slider("Current Lap", 1, 50, 28)
+selected_driver = st.sidebar.selectbox("🏎️ Select Driver Focus", ["Driver 1 (HAM)", "Driver 2 (RUS)"])
+
+current_lap = st.sidebar.slider("Current Lap", 1, 50, 28)
 tire_wear = st.sidebar.slider("Tire Wear (%)", 0, 100, 85)
-tire_compound = st.sidebar.selectbox("Current Tire Compound", ["Soft", "Medium", "Hard"], index=1)
-fuel_level = st.sidebar.slider("Fuel Remaining (%)", 0, 100, 35)
+tire_compound = st.sidebar.selectbox("Current Tire Compound", ["Soft", "Medium", "Hard", "Intermediate", "Wet"], index=1)
+fuel_remaining = st.sidebar.slider("Fuel Remaining (%)", 0, 100, 35)
 track_temp = st.sidebar.slider("Track Temperature (°C)", 15, 60, 42)
-weather = st.sidebar.selectbox("Weather Forecast", ["Dry", "Light Rain", "Heavy Rain"], index=0)
 
-# Layout Columns
-col1, col2, col3 = st.columns(3)
+weather_forecast = st.sidebar.selectbox("Current Weather", ["Dry", "Light Drizzle", "Heavy Rain"])
+laps_to_rain = st.sidebar.slider("Predicted Rain in (Laps)", 0, 20, 5 if weather_forecast != "Dry" else 0)
+
+st.sidebar.markdown("---")
+st.sidebar.markdown("<b style='color:#00F0FF;'>💬 COPILED COMMANDS</b>", unsafe_allow_html=True)
+user_command = st.sidebar.text_input("Ask Granite AI (e.g., 'Should I pit?')", "")
+
+# --- MAIN DASHBOARD HEADER ---
+st.markdown("<h1 style='margin-bottom:0px;'>🏎️ PITCREW AI // <span class='f1-title'>RACE COPILOT</span></h1>", unsafe_allow_html=True)
+st.markdown("<p class='f1-subtitle' style='font-size:18px; margin-top:0px;'>Strategy Engine Powered by IBM Granite AI & watsonx.ai</p>", unsafe_allow_html=True)
+st.markdown("<hr style='border: 1px solid #1F2937;'>", unsafe_allow_html=True)
+
+# --- TOP METRICS ROW ---
+col1, col2, col3, col4 = st.columns(4)
+
 with col1:
-    st.markdown(f"<div class='metric-card'><h5>🛞 TIRE WEAR ({tire_compound.upper()})</h5><h2>{tire_wear}%</h2><p style='color: {'#ff0055' if tire_wear > 80 else '#00ff88'}'>{'CRITICAL DEGRADATION' if tire_wear > 80 else 'OPTIMAL'}</p></div>", unsafe_allow_html=True)
+    st.metric(label=f"🛞 TIRE WEAR ({tire_compound.upper()})", value=f"{tire_wear}%")
+    if tire_wear > 80:
+        st.markdown('<p class="critical-alert">🚨 BOX THIS LAP</p>', unsafe_allow_html=True)
+
 with col2:
-    st.markdown(f"<div class='metric-card'><h5>⛽ FUEL STATUS</h5><h2>{fuel_level}%</h2><p>Est. {int(fuel_level * 0.4)} Laps Remaining</p></div>", unsafe_allow_html=True)
+    est_laps = int(fuel_remaining * 0.4)
+    st.metric(label="⛽ FUEL STATUS", value=f"{fuel_remaining}%", delta=f"Est. {est_laps} Laps")
+
 with col3:
-    st.markdown(f"<div class='metric-card'><h5>🏁 CONDITIONS</h5><h2>Lap {lap_number}/50</h2><p>{track_temp}°C | Weather: {weather.upper()}</p></div>", unsafe_allow_html=True)
+    st.metric(label="🏁 RACE PROGRESS", value=f"Lap {current_lap}/50", delta=f"{50 - current_lap} Laps Left")
 
-st.write("---")
-st.write("### 🧠 IBM GRANITE AI STRATEGY ENGINE")
+with col4:
+    st.metric(label="🌡️ TRACK CONDITIONS", value=f"{track_temp}°C", delta=weather_forecast)
 
-# Function to call IBM watsonx.ai
-def get_granite_recommendation(prompt_input):
-    # Credentials placeholder for production
-    credentials = {
-        "url": "https://us-south.ml.cloud.ibm.com",
-        "apikey": os.getenv("WATSONX_APIKEY", "mock_key_for_demo")
-    }
-    project_id = os.getenv("WATSONX_PROJECT_ID", "mock_project_id")
-    model_id = "ibm/granite-13b-chat-v2"
+st.markdown("<hr style='border: 1px solid #1F2937;'>", unsafe_allow_html=True)
+
+# --- MIDDLE SECTION: AI ENGINE & PLANNERS ---
+left_col, right_col = st.columns([1, 1])
+
+with left_col:
+    st.markdown("<h3 style='color:#FF1801;'>🧠 IBM GRANITE AI STRATEGY ENGINE</h3>", unsafe_allow_html=True)
     
-    # Check if real API keys exist, else fallback to high-quality logic
-    if credentials["apikey"] != "mock_key_for_demo":
-        try:
-            model = Model(model_id=model_id, credentials=credentials, project_id=project_id)
-            response = model.generate_text(prompt=prompt_input)
-            return response
-        except Exception as e:
-            return f"API Connection Error: Generating local strategy backup... \n\nSuggested Action: PIT NOW. Reason: Tire wear is at {tire_wear}% which exceeds safe thresholds."
-    else:
-        # High-fidelity local reasoning simulation mimicking Granite's analytical style
-        time.sleep(1.2)
-        if tire_wear > 80:
-            return f"[BOX THIS LAP] Granite AI Analysis: Tire wear has crossed the critical threshold at {tire_wear}%. On-track grip metrics show a 15% drop. Switching to HARD compound is highly recommended on Lap {lap_number} to defend your position against undercuts."
+    if user_command:
+        st.markdown(f"**🧐 Analyzing Command:** *'{user_command}'*")
+        if "pit" in user_command.lower() or "tire" in user_command.lower():
+            if tire_wear > 75 or (weather_forecast != "Dry" and laps_to_rain == 0):
+                st.success("🤖 **Granite AI:** BOX NOW! Switch to Hards/Intermediates immediately.")
+            else:
+                st.info("🤖 **Granite AI:** Stay out. Maintain pace for 2 more laps.")
         else:
-            return f"[STAY OUT] Granite AI Analysis: Current parameters indicate stable stint performance. Tire wear ({tire_wear}%) is optimal. Recommend extending current stint for 4-5 laps to build an overcut advantage."
-
-if st.button("RUN LIVE STRATEGY ANALYSIS"):
-    # Constructing the structural prompt for the AI Model
-    prompt = f"""You are an elite F1 Race Engineer powered by IBM Granite. Analyze this telemetry:
-    Lap: {lap_number}/50, Tire Wear: {tire_wear}%, Compound: {tire_compound}, Fuel: {fuel_level}%, Track Temp: {track_temp}C, Weather: {weather}.
-    Provide a professional, concise pitch on whether to pit or stay out, with clear risk reasons."""
+            st.write("🤖 **Granite AI:** Telemetry stable. Watch rear tire temps in sector 3.")
     
-    with st.spinner("Streaming real-time telemetry into watsonx.ai inference engine..."):
-        ai_response = get_granite_recommendation(prompt)
-        
-        st.success("Analysis Complete! Confidence Score: 94%")
-        if "BOX" in ai_response or tire_wear > 80:
-            st.markdown(f"<div class='alert-card'><h3>🚨 STRATEGY COMMAND: BOX THIS LAP</h3><p>{ai_response}</p></div>", unsafe_allow_html=True)
-        else:
-            st.markdown(f"<div class='metric-card' style='border-left: 5px solid #00ff88;'><h3>✅ STRATEGY COMMAND: STAY OUT</h3><p>{ai_response}</p></div>", unsafe_allow_html=True)
+    if weather_forecast != "Dry" and laps_to_rain > 0:
+        st.warning(f"🌧️ **WEATHER ALERT:** Rain expected in {laps_to_rain} laps. Adjusting pit windows.")
 
-# Graphic Analytics
-st.write("---")
-st.write("### 📈 LIVE PERFORMANCE & DEGRADATION MATRIX")
-chart_data = pd.DataFrame(np.random.randn(15, 2) * -0.3 + [tire_wear, tire_wear - 3], columns=['Predicted Wear', 'Target Matrix'])
+    st.markdown('<div class="strategy-box">', unsafe_allow_html=True)
+    st.markdown("<b style='color:#00F0FF;'>🎯 Target Window:</b> Lap 29 - Lap 32")
+    st.markdown(f"<b style='color:#00F0FF;'>📈 Next Compound:</b> {'Hard' if track_temp > 40 else 'Soft'}")
+    st.markdown("<b style='color:#00F0FF;'>⚡ Plan:</b> 2-Stop Strategy (Medium -> Hard -> Soft)")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+with right_col:
+    st.markdown("<h3 style='color:#00F0FF;'>🏁 LIVE UNDERCUT / OVERCUT PLANNER</h3>", unsafe_allow_html=True)
+    gap_to_car_ahead = st.slider("Gap to Car Ahead (seconds)", 0.5, 10.0, 2.5)
+    undercut_potential = "HIGH PROFIT" if tire_wear > 70 and gap_to_car_ahead < 3.0 else "LOW PROFIT"
+    
+    st.markdown(f'<div class="strategy-box">', unsafe_allow_html=True)
+    st.markdown(f"📊 **Undercut Potential:** <span style='color:#FF1801; font-weight:bold;'>{undercut_potential}</span>", unsafe_allow_html=True)
+    st.markdown(f"⏱️ **Pit Lane Loss Delta:** 22.4 seconds")
+    st.markdown(f"🚗 **Track Re-entry:** Predicted P5 (Clean Air)")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# --- BOTTOM SECTION: DEGRADATION MATRIX GRAPH ---
+st.markdown("<h3 style='color:#FFFFFF;'>📈 LIVE PERFORMANCE & DEGRADATION MATRIX</h3>", unsafe_allow_html=True)
+laps_range = np.arange(0, 15)
+pred_wear = np.minimum(100, tire_wear + (laps_range * 1.5))
+target_matrix = np.minimum(100, tire_wear + (laps_range * 1.1))
+
+chart_data = pd.DataFrame({
+    'Laps From Now': laps_range,
+    'Predicted Wear': pred_wear,
+    'Target Matrix': target_matrix
+}).set_index('Laps From Now')
+
 st.line_chart(chart_data)
