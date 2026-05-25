@@ -1,0 +1,8 @@
+streamlit==1.32.0
+ibm-watsonx-ai==1.0.4
+langflow==0.5.10
+pandas==2.2.1
+numpy==1.26.4
+plotly==5.19.0
+requests==2.31.0
+python-dotenv==1.0.1
