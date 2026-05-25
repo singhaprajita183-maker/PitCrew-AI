@@ -1,6 +1,10 @@
 # 🏎️ PitCrew AI // Race Strategy Copilot
 
 > **The Cognitive Strategy Engine for Motorsport Simulation** > Built with Streamlit, IBM Granite AI, and watsonx.ai. Telemetry is infrastructure. Strategy is the product.
+![Mission Control Surface](pich.jpg)
+
+---
+
 
 ---
 
